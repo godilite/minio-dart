@@ -55,9 +55,8 @@ class MinioUploader implements StreamConsumer<Uint8List> {
         headers['Content-MD5'] = base64.encode(md5digest);
       }
       if (minio.sessionToken != null) {
-        headers['x-amz-security-token'] = minio.sessionToken;  // add this line https://github.com/xtyxtyx/minio-dart/issues/88
+        headers['x-amz-security-token'] = minio.sessionToken!;
       }
-    
 
       if (_partNumber == 1 && chunk.length < partSize) {
         _etag = await _uploadChunk(chunk, headers, null);
@@ -96,8 +95,7 @@ class MinioUploader implements StreamConsumer<Uint8List> {
   @override
   Future<String?> close() async {
     if (_uploadId == null) return _etag;
-    return minio.completeMultipartUpload(
-        bucket, object, _uploadId!, _parts.keys.toList());
+    return minio.completeMultipartUpload(bucket, object, _uploadId!, _parts.keys.toList());
   }
 
   Map<String, String> getHeaders(List<int> chunk) {
@@ -141,15 +139,12 @@ class MinioUploader implements StreamConsumer<Uint8List> {
     // uploadId = await minio.findUploadId(bucket, object);
 
     if (_uploadId == null) {
-      _uploadId =
-          await minio.initiateNewMultipartUpload(bucket, object, metadata);
+      _uploadId = await minio.initiateNewMultipartUpload(bucket, object, metadata);
       return;
     }
 
     final parts = minio.listParts(bucket, object, _uploadId!);
-    final entries = await parts
-        .asyncMap((part) => MapEntry(part.partNumber, part))
-        .toList();
+    final entries = await parts.asyncMap((part) => MapEntry(part.partNumber, part)).toList();
     _oldParts = Map.fromEntries(entries);
   }
 
