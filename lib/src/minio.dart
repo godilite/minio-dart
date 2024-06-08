@@ -181,15 +181,13 @@ class Minio {
         headers['x-amz-copy-source-if-modified-since'] = conditions.modified!;
       }
       if (conditions.unmodified != null) {
-        headers['x-amz-copy-source-if-unmodified-since'] =
-            conditions.unmodified!;
+        headers['x-amz-copy-source-if-unmodified-since'] = conditions.unmodified!;
       }
       if (conditions.matchETag != null) {
         headers['x-amz-copy-source-if-match'] = conditions.matchETag!;
       }
       if (conditions.matchETagExcept != null) {
-        headers['x-amz-copy-source-if-none-match'] =
-            conditions.matchETagExcept!;
+        headers['x-amz-copy-source-if-none-match'] = conditions.matchETagExcept!;
       }
     }
 
@@ -228,8 +226,7 @@ class Minio {
       );
       for (var upload in result.uploads) {
         if (upload.key != object) continue;
-        if (latestUpload == null ||
-            upload.initiated!.isAfter(latestUpload.initiated!)) {
+        if (latestUpload == null || upload.initiated!.isAfter(latestUpload.initiated!)) {
           latestUpload = upload;
         }
       }
@@ -405,8 +402,7 @@ class Minio {
       );
       for (var upload in result.uploads) {
         final parts = listParts(bucket, upload.key!, upload.uploadId!);
-        final size =
-            await parts.fold(0, (dynamic acc, item) => acc + item.size);
+        final size = await parts.fold(0, (dynamic acc, item) => acc + item.size);
         yield IncompleteUpload(upload: upload, size: size);
       }
       keyMarker = result.nextKeyMarker;
@@ -478,11 +474,8 @@ class Minio {
       region: region ?? 'us-east-1',
     );
     validate(resp);
-    final bucketsNode =
-        xml.XmlDocument.parse(resp.body).findAllElements('Buckets').first;
-    return bucketsNode.children
-        .map((n) => Bucket.fromXml(n as XmlElement))
-        .toList();
+    final bucketsNode = xml.XmlDocument.parse(resp.body).findAllElements('Buckets').first;
+    return bucketsNode.children.map((n) => Bucket.fromXml(n as XmlElement)).toList();
   }
 
   /// Returns all [Object]s in a bucket.
@@ -572,9 +565,7 @@ class Minio {
     final isTruncated = getNodeProp(node.rootElement, 'IsTruncated')!.text;
     final nextMarker = getNodeProp(node.rootElement, 'NextMarker')?.text;
     final objs = node.findAllElements('Contents').map((c) => Object.fromXml(c));
-    final prefixes = node
-        .findAllElements('CommonPrefixes')
-        .map((c) => CommonPrefix.fromXml(c));
+    final prefixes = node.findAllElements('CommonPrefixes').map((c) => CommonPrefix.fromXml(c));
 
     return ListObjectsOutput()
       ..contents = objs.toList()
@@ -680,12 +671,9 @@ class Minio {
 
     final node = xml.XmlDocument.parse(resp.body);
     final isTruncated = getNodeProp(node.rootElement, 'IsTruncated')!.text;
-    final nextContinuationToken =
-        getNodeProp(node.rootElement, 'NextContinuationToken')?.text;
+    final nextContinuationToken = getNodeProp(node.rootElement, 'NextContinuationToken')?.text;
     final objs = node.findAllElements('Contents').map((c) => Object.fromXml(c));
-    final prefixes = node
-        .findAllElements('CommonPrefixes')
-        .map((c) => CommonPrefix.fromXml(c));
+    final prefixes = node.findAllElements('CommonPrefixes').map((c) => CommonPrefix.fromXml(c));
 
     return ListObjectsV2Output()
       ..contents = objs.toList()
@@ -749,9 +737,7 @@ class Minio {
     }
 
     region ??= this.region ?? 'us-east-1';
-    final payload = region == 'us-east-1'
-        ? ''
-        : CreateBucketConfiguration(region).toXml().toString();
+    final payload = region == 'us-east-1' ? '' : CreateBucketConfiguration(region).toXml().toString();
 
     final resp = await _client.request(
       method: 'PUT',
@@ -816,31 +802,23 @@ class Minio {
     postPolicy.policy['conditions'].push(['eq', r'$x-amz-date', dateStr]);
     postPolicy.formData['x-amz-date'] = dateStr;
 
-    postPolicy.policy['conditions']
-        .push(['eq', r'$x-amz-algorithm', 'AWS4-HMAC-SHA256']);
+    postPolicy.policy['conditions'].push(['eq', r'$x-amz-algorithm', 'AWS4-HMAC-SHA256']);
     postPolicy.formData['x-amz-algorithm'] = 'AWS4-HMAC-SHA256';
 
-    postPolicy.policy['conditions'].push(
-        ['eq', r'$x-amz-credential', accessKey + '/' + getScope(region, date)]);
-    postPolicy.formData['x-amz-credential'] =
-        accessKey + '/' + getScope(region, date);
+    postPolicy.policy['conditions'].push(['eq', r'$x-amz-credential', accessKey + '/' + getScope(region, date)]);
+    postPolicy.formData['x-amz-credential'] = accessKey + '/' + getScope(region, date);
 
     if (sessionToken != null) {
-      postPolicy.policy['conditions']
-          .push(['eq', r'$x-amz-security-token', sessionToken]);
+      postPolicy.policy['conditions'].push(['eq', r'$x-amz-security-token', sessionToken]);
     }
 
     final policyBase64 = jsonBase64(postPolicy.policy);
     postPolicy.formData['policy'] = policyBase64;
 
-    final signature =
-        postPresignSignatureV4(region, date, secretKey, policyBase64);
+    final signature = postPresignSignatureV4(region, date, secretKey, policyBase64);
 
     postPolicy.formData['x-amz-signature'] = signature;
-    final url = _client
-        .getBaseRequest('POST', postPolicy.formData['bucket'], null, region,
-            null, null, null, null)
-        .url;
+    final url = _client.getBaseRequest('POST', postPolicy.formData['bucket'], null, region, null, null, null, null).url;
     var portStr = (port == 80 || port == 443) ? '' : ':$port';
     var urlStr = '${url.scheme}://${url.host}$portStr${url.path}';
     return PostPolicyResult(postURL: urlStr, formData: postPolicy.formData);
@@ -1084,9 +1062,7 @@ class Minio {
     );
 
     return AccessControlPolicy.fromXml(
-      xml.XmlDocument.parse(resp.body)
-          .findElements('AccessControlPolicy')
-          .first,
+      xml.XmlDocument.parse(resp.body).findElements('AccessControlPolicy').first,
     );
   }
 
