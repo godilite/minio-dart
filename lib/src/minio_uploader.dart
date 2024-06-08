@@ -19,6 +19,7 @@ class MinioUploader implements StreamConsumer<Uint8List> {
     this.partSize,
     this.metadata,
     this.onProgress,
+    this.onHeaders,
   );
 
   final Minio minio;
@@ -28,6 +29,7 @@ class MinioUploader implements StreamConsumer<Uint8List> {
   final int partSize;
   final Map<String, String> metadata;
   final void Function(int)? onProgress;
+  final void Function(Map<String, String>)? onHeaders;
 
   var _partNumber = 1;
 
@@ -125,7 +127,7 @@ class MinioUploader implements StreamConsumer<Uint8List> {
     );
 
     validate(resp);
-
+    onHeaders!(resp.headers);
     var etag = resp.headers['etag'];
     if (etag != null) etag = trimDoubleQuote(etag);
 

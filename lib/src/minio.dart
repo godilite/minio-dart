@@ -892,6 +892,7 @@ class Minio {
     int? chunkSize,
     Map<String, String>? metadata,
     void Function(int)? onProgress,
+    void Function(Map<String, String>)? onHeaders,
   }) async {
     MinioInvalidBucketNameError.check(bucket);
     MinioInvalidObjectNameError.check(object);
@@ -916,6 +917,7 @@ class Minio {
       partSize,
       metadata,
       onProgress,
+      onHeaders,
     );
     final chunker = MinChunkSize(partSize);
     final etag = await data.transform(chunker).pipe(uploader);
