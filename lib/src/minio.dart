@@ -919,9 +919,14 @@ class Minio {
       onProgress,
       onHeaders,
     );
-    final chunker = MinChunkSize(partSize);
-    final etag = await data.transform(chunker).pipe(uploader);
-    return etag.toString();
+
+    try {
+      final chunker = MinChunkSize(partSize);
+      await data.transform(chunker).pipe(uploader);
+    } finally {
+      final etag = await uploader.close();
+      return etag.toString();
+    }
   }
 
   /// Remove all bucket notification
